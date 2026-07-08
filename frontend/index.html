@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PayFlow Dashboard</title>
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --bg-card: #131a2a;
+    --bg-card-alt: #1b2438;
+    --border: #2a3550;
+    --text: #e7ebf3;
+    --text-muted: #8b96ad;
+    --accent: #5b8cff;
+    --accent-hover: #4a78e6;
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --purple: #a78bfa;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(160deg, var(--bg) 0%, #060911 100%);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+  }
+
+  header h1 span {
+    color: var(--accent);
+  }
+
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .full { grid-column: 1 / -1; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+
+  .card h2 {
+    margin: 0 0 16px 0;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    margin-top: 12px;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card-alt);
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  button {
+    margin-top: 18px;
+    width: 100%;
+    padding: 11px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  button:hover { background: var(--accent-hover); }
+  button:disabled { background: #384258; cursor: not-allowed; }
+
+  .btn-small {
+    width: auto;
+    margin-top: 0;
+    padding: 6px 10px;
+    font-size: 12px;
+    margin-right: 6px;
+  }
+
+  .btn-complete { background: var(--green); }
+  .btn-complete:hover { background: #24b986; }
+  .btn-fail { background: var(--red); }
+  .btn-fail:hover { background: #e35555; }
+  .btn-refund { background: var(--purple); }
+  .btn-refund:hover { background: #8f6ff0; }
+
+  .api-key-box {
+    margin-top: 14px;
+    padding: 12px;
+    background: var(--bg-card-alt);
+    border: 1px dashed var(--accent);
+    border-radius: 8px;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 13px;
+    word-break: break-all;
+    color: var(--accent);
+    display: none;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+
+  .dot-ok { background: var(--green); }
+  .dot-error { background: var(--red); }
+  .dot-pending { background: var(--text-muted); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+
+  .badge {
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  .badge-pending { background: rgba(251, 191, 36, 0.15); color: var(--amber); }
+  .badge-completed { background: rgba(52, 211, 153, 0.15); color: var(--green); }
+  .badge-failed { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+  .badge-refunded { background: rgba(167, 139, 250, 0.15); color: var(--purple); }
+
+  .msg {
+    margin-top: 12px;
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    display: none;
+  }
+
+  .msg-error { background: rgba(248, 113, 113, 0.12); color: var(--red); }
+  .msg-success { background: rgba(52, 211, 153, 0.12); color: var(--green); }
+
+  .empty-row td {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 24px 0;
+  }
+
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pay<span>Flow</span> Dashboard</h1>
+  <div id="health-indicator">
+    <span class="status-dot dot-pending"></span>
+    <span id="health-text">Comprobando API...</span>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Crear Merchant</h2>
+    <form id="merchant-form">
+      <label for="merchant-name">Nombre</label>
+      <input type="text" id="merchant-name" required placeholder="Acme Store" />
+
+      <label for="merchant-email">Email</label>
+      <input type="email" id="merchant-email" required placeholder="contacto@acme.com" />
+
+      <button type="submit">Crear Merchant</button>
+    </form>
+    <div class="api-key-box" id="api-key-box"></div>
+    <div class="msg" id="merchant-msg"></div>
+  </section>
+
+  <section class="card">
+    <h2>Crear Pago</h2>
+    <form id="payment-form">
+      <label for="payment-amount">Importe</label>
+      <input type="number" id="payment-amount" step="0.01" min="0.01" required placeholder="49.99" />
+
+      <label for="payment-currency">Moneda</label>
+      <input type="text" id="payment-currency" value="EUR" maxlength="3" required />
+
+      <label for="payment-description">Descripción</label>
+      <input type="text" id="payment-description" placeholder="Suscripción mensual" />
+
+      <label for="payment-customer-email">Email del cliente</label>
+      <input type="email" id="payment-customer-email" required placeholder="cliente@ejemplo.com" />
+
+      <button type="submit" id="payment-submit" disabled>Crear Pago</button>
+    </form>
+    <div class="msg" id="payment-msg"></div>
+  </section>
+
+  <section class="card full">
+    <h2>Pagos del Merchant</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Importe</th>
+          <th>Estado</th>
+          <th>Cliente</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="payments-tbody">
+        <tr class="empty-row"><td colspan="5">Crea un merchant para ver sus pagos</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+  const API_BASE = "http://localhost:8000";
+  let currentApiKey = null;
+
+  const merchantForm = document.getElementById("merchant-form");
+  const merchantMsg = document.getElementById("merchant-msg");
+  const apiKeyBox = document.getElementById("api-key-box");
+  const paymentForm = document.getElementById("payment-form");
+  const paymentMsg = document.getElementById("payment-msg");
+  const paymentSubmit = document.getElementById("payment-submit");
+  const paymentsTbody = document.getElementById("payments-tbody");
+  const healthDot = document.querySelector("#health-indicator .status-dot");
+  const healthText = document.getElementById("health-text");
+
+  function showMsg(el, text, type) {
+    el.textContent = text;
+    el.className = "msg msg-" + type;
+    el.style.display = "block";
+  }
+
+  async function checkHealth() {
+    try {
+      const res = await fetch(`${API_BASE}/health`);
+      if (!res.ok) throw new Error("respuesta no ok");
+      const data = await res.json();
+      healthDot.className = "status-dot dot-ok";
+      healthText.textContent = `API activa (v${data.version})`;
+    } catch (err) {
+      healthDot.className = "status-dot dot-error";
+      healthText.textContent = "API no disponible";
+    }
+  }
+
+  merchantForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("merchant-name").value;
+    const email = document.getElementById("merchant-email").value;
+
+    try {
+      const res = await fetch(`${API_BASE}/merchants`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Error al crear merchant");
+
+      currentApiKey = data.api_key;
+      apiKeyBox.textContent = `API Key: ${data.api_key}`;
+      apiKeyBox.style.display = "block";
+      showMsg(merchantMsg, `Merchant "${data.name}" creado correctamente.`, "success");
+      paymentSubmit.disabled = false;
+      await refreshPayments();
+    } catch (err) {
+      showMsg(merchantMsg, err.message, "error");
+    }
+  });
+
+  paymentForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!currentApiKey) return;
+
+    const amount = parseFloat(document.getElementById("payment-amount").value);
+    const currency = document.getElementById("payment-currency").value.toUpperCase();
+    const description = document.getElementById("payment-description").value || null;
+    const customer_email = document.getElementById("payment-customer-email").value;
+
+    try {
+      const res = await fetch(`${API_BASE}/payments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": currentApiKey,
+        },
+        body: JSON.stringify({ amount, currency, description, customer_email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Error al crear el pago");
+
+      showMsg(paymentMsg, "Pago creado correctamente.", "success");
+      paymentForm.reset();
+      document.getElementById("payment-currency").value = "EUR";
+      await refreshPayments();
+    } catch (err) {
+      showMsg(paymentMsg, err.message, "error");
+    }
+  });
+
+  async function refreshPayments() {
+    if (!currentApiKey) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/payments`, {
+        headers: { "X-API-Key": currentApiKey },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Error al listar pagos");
+      renderPayments(data);
+    } catch (err) {
+      showMsg(paymentMsg, err.message, "error");
+    }
+  }
+
+  function actionButtons(payment) {
+    const actions = {
+      pending: [
+        { label: "Complete", status: "completed", cls: "btn-complete" },
+        { label: "Fail", status: "failed", cls: "btn-fail" },
+      ],
+      completed: [{ label: "Refund", status: "refunded", cls: "btn-refund" }],
+      failed: [],
+      refunded: [],
+    };
+    return (actions[payment.status] || [])
+      .map(
+        (a) =>
+          `<button class="btn-small ${a.cls}" onclick="changeStatus('${payment.id}', '${a.status}')">${a.label}</button>`
+      )
+      .join("");
+  }
+
+  function renderPayments(payments) {
+    if (!payments.length) {
+      paymentsTbody.innerHTML = '<tr class="empty-row"><td colspan="5">Todavía no hay pagos</td></tr>';
+      return;
+    }
+    paymentsTbody.innerHTML = payments
+      .map(
+        (p) => `
+        <tr>
+          <td>${p.id.slice(0, 8)}...</td>
+          <td>${p.amount.toFixed(2)} ${p.currency}</td>
+          <td><span class="badge badge-${p.status}">${p.status}</span></td>
+          <td>${p.customer_email}</td>
+          <td>${actionButtons(p)}</td>
+        </tr>`
+      )
+      .join("");
+  }
+
+  async function changeStatus(paymentId, newStatus) {
+    try {
+      const res = await fetch(`${API_BASE}/payments/${paymentId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Error al cambiar el estado");
+      await refreshPayments();
+    } catch (err) {
+      showMsg(paymentMsg, err.message, "error");
+    }
+  }
+
+  checkHealth();
+  setInterval(checkHealth, 15000);
+</script>
+
+</body>
+</html>
