@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS payments (
     status TEXT NOT NULL DEFAULT 'pending',
     description TEXT,
     customer_email TEXT NOT NULL,
+    refunded_amount REAL NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (merchant_id) REFERENCES merchants (id)

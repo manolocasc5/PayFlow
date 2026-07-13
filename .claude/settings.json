@@ -1,0 +1,54 @@
+{
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "$input = $Input | ConvertFrom-Json; $entry = @{ts=(Get-Date -Format o); session=$input.session_id; cmd=$input.tool_input.command} | ConvertTo-Json -Compress; $logDir = Join-Path $env:CLAUDE_PROJECT_DIR '.claude/logs'; New-Item -ItemType Directory -Force -Path $logDir | Out-Null; Add-Content -Path (Join-Path $logDir 'audit.jsonl') -Value $entry",
+                        "shell": "powershell",
+                        "async": true
+                    }
+                ]
+            },
+            {
+                "matcher": "Bash|Write|Edit|MultiEdit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/security_gate.py"
+                    }
+                ]
+            }
+        ],
+        "PostToolUse": [
+            {
+                "matcher": "Edit|MultiEdit|Write",
+                "hooks": [
+                    {
+                        "type": "prompt",
+                        "prompt": "Eres un revisor de código para un proyecto FastAPI en Python. Analiza la siguiente acción de edición de código: $ARGUMENTS. Verifica estas convenciones: 1) Todas las funciones tienen type hints en parámetros y retorno. 2) Las funciones públicas tienen docstring. 3) Las queries SQL usan parámetros (?) en vez de f-strings. 4) Los endpoints FastAPI usan modelos Pydantic para request y response. 5) No hay secrets hardcodeados (API keys, passwords, tokens literales). Si alguna convención se viola, responde que SÍ hay problema y explica cuál. Si todo está correcto, responde que NO hay problema.",
+                        "timeout": 45
+                    }
+                ]
+            }
+        ],
+        "Stop": [
+            {
+                "hooks": [
+                    {
+                        "type": "http",
+                        "url": "http://localhost:5001/hooks/task-completed",
+                        "timeout": 20,
+                        "headers": {
+                            "Authorization": "Bearer $PAYFLOW_WEBHOOK_SECRET",
+                            "Content-Type": "application/json"
+                        },
+                        "allowedEnvVars": ["PAYFLOW_WEBHOOK_SECRET"]
+                    }
+                ]
+            }
+        ]
+    }
+}

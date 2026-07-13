@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 
-PaymentStatus = Literal["pending", "completed", "failed", "refunded"]
+PaymentStatus = Literal["pending", "completed", "failed", "refunded", "partially_refunded"]
 MerchantStatus = Literal["active", "suspended"]
 
 
@@ -53,6 +53,7 @@ class PaymentOut(BaseModel):
     status: PaymentStatus
     description: str | None
     customer_email: str
+    refunded_amount: float
     created_at: datetime
     updated_at: datetime
 
@@ -61,6 +62,12 @@ class PaymentStatusUpdate(BaseModel):
     """Payload para cambiar el estado de un pago."""
 
     status: Literal["completed", "failed", "refunded"]
+
+
+class PartialRefundRequest(BaseModel):
+    """Payload para solicitar el reembolso parcial de un pago."""
+
+    amount: float = Field(gt=0)
 
 
 class HealthResponse(BaseModel):

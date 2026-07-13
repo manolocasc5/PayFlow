@@ -6,7 +6,7 @@ import aiosqlite
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from app.database import get_db
-from app.models import PaymentCreate, PaymentOut, PaymentStatusUpdate
+from app.models import PartialRefundRequest, PaymentCreate, PaymentOut, PaymentStatusUpdate
 from app.services import merchant_service, payment_service
 
 router = APIRouter(prefix="/payments", tags=["payments"])
@@ -82,4 +82,23 @@ async def update_payment_status(
         )
 
     updated = await payment_service.update_payment_status(db, payment_id, payload.status)
+    return updated
+
+
+@router.post("/{payment_id}/partial-refund", response_model=PaymentOut)
+async def partial_refund_payment(
+    payment_id: str,
+    payload: PartialRefundRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+) -> dict:
+    """Aplica un reembolso parcial a un pago. 404 si no existe, 400 si el importe o el estado no son válidos."""
+    payment = await payment_service.get_payment_by_id(db, payment_id)
+    if payment is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pago no encontrado")
+
+    try:
+        updated = await payment_service.partial_refund_payment(db, payment_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
     return updated
